@@ -1,39 +1,64 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-interface Task {
+interface SubTask {
     id: string;
     title: string;
 }
 
+interface Task {
+    id: string;
+    title: string;
+    subtasks: SubTask[];
+}
+
 const NewTaskPage: React.FC = () => {
     const [title, setTitle] = useState<string>('');
+    const [subtasks, setSubtasks] = useState<string[]>(['']);
     const navigate = useNavigate();
 
+    const handleAddSubtask = () => {
+        const lastSubtask = subtasks[subtasks.length - 1];
+        if (!lastSubtask.trim()) {
+            alert('Пожалуйста, введите название подзадачи.');
+            return;
+        }
+
+        setSubtasks([...subtasks, '']);
+    };
+
+    const handleDeleteSubtask = (index: number) => {
+        setSubtasks((prevSubtasks) => {
+            const updatedSubtasks = [...prevSubtasks];
+            updatedSubtasks.splice(index, 1);
+            return updatedSubtasks;
+        });
+    };
+
     const handleSaveTask = () => {
-        // Проверка, чтобы title был не пустым
         if (!title.trim()) {
             alert('Пожалуйста, введите название задачи.');
             return;
         }
 
-        // Генерация уникального id для новой задачи
         const newTask: Task = {
             id: Date.now().toString(),
             title: title.trim(),
+            subtasks: subtasks
+                .filter(subtask => subtask.trim())
+                .map((subtask, index) => ({
+                    id: `${Date.now()}-${index + 1}`,
+                    title: subtask.trim(),
+                })),
         };
 
-        // Получение текущего списка задач из localStorage
         const storedTasks = localStorage.getItem('tasks');
         const tasks = storedTasks ? JSON.parse(storedTasks) : [];
 
-        // Добавление новой задачи в список
         const updatedTasks = [...tasks, newTask];
 
-        // Сохранение обновленного списка в localStorage
         localStorage.setItem('tasks', JSON.stringify(updatedTasks));
 
-        // Перенаправление пользователя на страницу со списком задач
         navigate('/');
     };
 
@@ -44,8 +69,35 @@ const NewTaskPage: React.FC = () => {
                 Название задачи:
                 <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
             </label>
-            <button onClick={handleSaveTask}>Сохранить</button>
-            <Link to="/tasks">Отмена</Link>
+            <div>
+                <h2>Подзадачи:</h2>
+                {subtasks.map((subtask, index) => (
+                    <div key={index}>
+                        <label>
+                            Подзадача {index + 1}:
+                            <input
+                                type="text"
+                                value={subtask}
+                                onChange={(e) => {
+                                    const newSubtasks = [...subtasks];
+                                    newSubtasks[index] = e.target.value;
+                                    setSubtasks(newSubtasks);
+                                }}
+                            />
+                        </label>
+                        <button className="btn btn-danger ms-2" onClick={() => handleDeleteSubtask(index)}>
+                            Удалить
+                        </button>
+                    </div>
+                ))}
+                <button className="btn btn-success my-2 me-2" onClick={handleAddSubtask}>Добавить подзадачу</button>
+            </div>
+            <button className="btn btn-success my-2 me-2" onClick={handleSaveTask}>
+                Сохранить
+            </button>
+            <Link className="btn btn-danger" to="/">
+                Отмена
+            </Link>
         </div>
     );
 };

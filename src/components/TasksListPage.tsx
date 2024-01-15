@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
-interface Task {
+interface SubTask {
     id: string;
     title: string;
 }
+
+interface Task {
+    id: string;
+    title: string;
+    subtasks: SubTask[];
+}
+
 
 const TasksListPage: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
@@ -14,10 +21,41 @@ const TasksListPage: React.FC = () => {
         const storedTasks = localStorage.getItem('tasks');
         if (!storedTasks) {
             const testTasks: Task[] = [
-                { id: '1', title: 'Посадить цветы' },
-                { id: '2', title: 'Помыть машину' },
-                { id: '3', title: 'Подготовить ужин' },
+                {
+                    id: '1',
+                    title: 'Посадить цветы',
+                    subtasks: [
+                        { id: '1.1', title: 'Выбрать цветы' },
+                        { id: '1.2', title: 'Купить почву' },
+                        { id: '1.3', title: 'Полить цветы' },
+                        { id: '1.4', title: 'Разместить в горшках' },
+                        { id: '1.5', title: 'Ухаживать за растениями' },
+                    ],
+                },
+                {
+                    id: '2',
+                    title: 'Помыть машину',
+                    subtasks: [
+                        { id: '2.1', title: 'Подготовить ведра с водой' },
+                        { id: '2.2', title: 'Намылить машину' },
+                        { id: '2.3', title: 'Промыть водой' },
+                        { id: '2.4', title: 'Протереть сухой тряпкой' },
+                        { id: '2.5', title: 'Проверить результат' },
+                    ],
+                },
+                {
+                    id: '3',
+                    title: 'Подготовить ужин',
+                    subtasks: [
+                        { id: '3.1', title: 'Выбрать рецепт' },
+                        { id: '3.2', title: 'Купить продукты' },
+                        { id: '3.3', title: 'Приготовить блюдо' },
+                        { id: '3.4', title: 'Подать на стол' },
+                        { id: '3.5', title: 'Убрать посуду' },
+                    ],
+                },
             ];
+
 
             localStorage.setItem('tasks', JSON.stringify(testTasks));
             setTasks(testTasks);
@@ -41,14 +79,21 @@ const TasksListPage: React.FC = () => {
                 {tasks.map((task) => (
                     <li key={task.id}>
                         <Link to={`/tasks/${task.id}`}>{task.title}</Link>
-                        <button onClick={() => handleDeleteTask(task.id)}>Удалить</button>
-                        <Link to={`/tasks/edit/${task.id}`} className="btn btn-primary mr-2">
+                        <button className="btn btn-danger ms-2" onClick={() => handleDeleteTask(task.id)}>Удалить</button>
+                        <Link to={`/tasks/edit/${task.id}`} className="btn btn-primary ms-2">
                             Редактировать
                         </Link>
+                        <ul>
+                            {/* Проверка на наличие subtasks перед использованием slice */}
+                            {task.subtasks && task.subtasks.slice(0, 3).map((subtask) => (
+                                <li key={subtask.id}>{subtask.title}</li>
+                            ))}
+                        </ul>
                     </li>
                 ))}
+
             </ul>
-            <Link to="/tasks/new">Создать новую задачу</Link>
+            <Link to="/tasks/new" className="btn btn-primary">Создать новую задачу</Link>
         </div>
     );
 };
