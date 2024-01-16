@@ -18,8 +18,6 @@ const NewTaskPage: React.FC = () => {
     const navigate = useNavigate();
 
     const handleAddSubtask = () => {
-        const lastSubtask = subtasks[subtasks.length - 1];
-
         setSubtasks([...subtasks, '']);
     };
 
@@ -32,12 +30,7 @@ const NewTaskPage: React.FC = () => {
     };
 
     const handleSaveTask = () => {
-        if (!title.trim()) {
-            alert('Пожалуйста, введите название задачи.');
-            return;
-        }
-
-        const newTask: Task = {
+             const newTask: Task = {
             id: Date.now().toString(),
             title: title.trim(),
             subtasks: subtasks
