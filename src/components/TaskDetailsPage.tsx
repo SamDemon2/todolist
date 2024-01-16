@@ -16,9 +16,6 @@ interface Task {
     isCompleted?: boolean;
 }
 
-interface ChangeStackItem {
-    task: Task | null;
-}
 
 const TaskDetailsPage: React.FC = () => {
     const { taskId } = useParams<{ taskId: string }>();
@@ -30,9 +27,8 @@ const TaskDetailsPage: React.FC = () => {
     const [editedSubtaskText, setEditedSubtaskText] = useState<string>('');
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-    const [changeStack, setChangeStack] = useState<Array<ChangeStackItem>>([]);
-    const [stackIndex, setStackIndex] = useState<number>(-1);
     const navigate = useNavigate();
+
 
     useEffect(() => {
         const storedTasks = localStorage.getItem('tasks');
@@ -44,29 +40,14 @@ const TaskDetailsPage: React.FC = () => {
         }
     }, [taskId]);
 
-    const addToChangeStack = (task: Task | null) => {
-        setChangeStack((prevStack) => {
-            const index = stackIndex + 1;
-            const newStack: ChangeStackItem[] = [...prevStack.slice(0, index), { task: task }, ...prevStack.slice(index)];
-            setStackIndex(index);
-            return newStack;
-        });
-    };
+
 
     const handleUndoChanges = () => {
-        if (stackIndex > 0) {
-            const prevState = changeStack[stackIndex - 1].task;
-            setTask(prevState);
-            setStackIndex(stackIndex - 1);
-        }
+
     };
 
     const handleRedoChanges = () => {
-        if (stackIndex < changeStack.length - 1) {
-            const nextState = changeStack[stackIndex + 1].task;
-            setTask(nextState);
-            setStackIndex(stackIndex + 1);
-        }
+
     };
 
     const handleSaveChanges = () => {
@@ -81,7 +62,7 @@ const TaskDetailsPage: React.FC = () => {
                         localStorage.setItem('tasks', JSON.stringify(updatedTasks));
                     }
                     navigate('/');
-                    addToChangeStack(updatedTask);
+
                     return updatedTask;
                 }
                 return null;
@@ -182,7 +163,6 @@ const TaskDetailsPage: React.FC = () => {
                     localStorage.setItem('tasks', JSON.stringify(updatedTasks));
                 }
                 navigate('/');
-                addToChangeStack(null);
                 return null;
             }
             return null;
@@ -214,9 +194,9 @@ const TaskDetailsPage: React.FC = () => {
             <div>
                 <label>
                     Новая подзадача:
-                    <input type="text" value={newSubtask} onChange={(e) => setNewSubtask(e.target.value)} />
+                    <input type="text" value={newSubtask} className="mt-2" onChange={(e) => setNewSubtask(e.target.value)} />
                 </label>
-                <button className="btn btn-success" onClick={handleAddSubtask}>Добавить подзадачу</button>
+                <button className="btn btn-success ms-2 " onClick={handleAddSubtask}>Добавить подзадачу</button>
             </div>
 
             <ul>
@@ -228,9 +208,10 @@ const TaskDetailsPage: React.FC = () => {
                                     type="text"
                                     value={editedSubtaskText}
                                     onChange={(e) => setEditedSubtaskText(e.target.value)}
+                                    className="mt-3"
                                 />
-                                <button className="btn btn-success" onClick={handleSaveEditSubtask}>Сохранить</button>
-                                <button className="btn btn-danger" onClick={handleCancelEditSubtask}>Отменить</button>
+                                <button className="btn btn-success  ms-2 me-2" onClick={handleSaveEditSubtask}>Сохранить</button>
+                                <button className="btn btn-danger  ms-2" onClick={handleCancelEditSubtask}>Отменить</button>
                             </>
                         ) : (
                             <>
@@ -240,8 +221,8 @@ const TaskDetailsPage: React.FC = () => {
                                     onChange={() => handleToggleSubtaskCompletion(subtask.id)}
                                 />
                                 {subtask.title}
-                                <button className="btn btn-danger me-2 ms-2" onClick={() => handleDeleteSubtask(subtask.id)}>Удалить</button>
-                                <button className="btn btn-primary" onClick={() => handleStartEditSubtask(subtask.id, subtask.title)}>Редактировать текст</button>
+                                <button className="btn btn-danger me-2 ms-2 mt-2" onClick={() => handleDeleteSubtask(subtask.id)}>Удалить</button>
+                                <button className="btn btn-primary mt-2" onClick={() => handleStartEditSubtask(subtask.id, subtask.title)}>Редактировать текст</button>
                             </>
                         )}
                     </li>
@@ -254,10 +235,7 @@ const TaskDetailsPage: React.FC = () => {
             <button className="btn btn-dark me-2" onClick={handleRedoChanges}>Повторить отмененное изменение</button>
 
             <div>
-                <Link to={`/tasks/edit/${task.id}`} className="btn btn-primary mr-2">
-                    Редактировать
-                </Link>
-                <button onClick={handleDeleteTask} className="btn btn-danger ms-2">
+                <button onClick={handleDeleteTask} className="btn btn-danger mt-2">
                     Удалить
                 </button>
             </div>

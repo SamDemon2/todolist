@@ -19,10 +19,6 @@ const NewTaskPage: React.FC = () => {
 
     const handleAddSubtask = () => {
         const lastSubtask = subtasks[subtasks.length - 1];
-        if (!lastSubtask.trim()) {
-            alert('Пожалуйста, введите название подзадачи.');
-            return;
-        }
 
         setSubtasks([...subtasks, '']);
     };
@@ -83,6 +79,7 @@ const NewTaskPage: React.FC = () => {
                                     newSubtasks[index] = e.target.value;
                                     setSubtasks(newSubtasks);
                                 }}
+                                className="mt-2"
                             />
                         </label>
                         <button className="btn btn-danger ms-2" onClick={() => handleDeleteSubtask(index)}>
