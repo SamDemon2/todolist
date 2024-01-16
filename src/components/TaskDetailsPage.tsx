@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
+import ConfirmDeleteModal from "./modals/ConfirmDeleteModal";
+
+
 
 interface SubTask {
     id: string;
@@ -22,6 +25,7 @@ const TaskDetailsPage: React.FC = () => {
     const [newSubtask, setNewSubtask] = useState<string>('');
     const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null); // Новое состояние для отслеживания редактируемой подзадачи
     const [editedSubtaskText, setEditedSubtaskText] = useState<string>(''); // Новое состояние для редактирования текста подзадачи
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // Состояние для отслеживания открытости модального окна удаления
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -34,9 +38,13 @@ const TaskDetailsPage: React.FC = () => {
         }
     }, [taskId]);
 
-    // Логика удаления задачи
-        const handleDeleteTask = () => {
-        if (window.confirm('Вы уверены, что хотите удалить эту задачу?')) {
+    const handleDeleteTask = () => {
+        // Открывает модальное окно при удалении задачи
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleConfirmDelete = () => {
+        // Логика удаления задачи
             setTask((prevTask) => {
                 if (prevTask) {
                     // Удаление задачи из localStorage
@@ -53,8 +61,14 @@ const TaskDetailsPage: React.FC = () => {
                 }
                 return null;
             });
-        }
+            setIsDeleteModalOpen(false); // Закрывает модальное окно после подтверждения удаления
     };
+
+    const handleCancelDelete = () => {
+        // Закрывает модальное окно при отмене удаления
+        setIsDeleteModalOpen(false);
+    };
+
 
     const handleSaveChanges = () => {
         // Логика сохранения изменений
@@ -84,8 +98,8 @@ const TaskDetailsPage: React.FC = () => {
         setIsEditing(false);
         // При отмене редактирования восстанавливается исходное состояние задачи
         setEditedTask(task ? { ...task } : null);
-        setEditingSubtaskId(null); // Очищаем редактируемую подзадачу при отмене редактирования
-        setEditedSubtaskText(''); // Очищаем текст редактируемой подзадачи при отмене редактирования
+        setEditingSubtaskId(null); // Очистка редактируемой подзадачи при отмене редактирования
+        setEditedSubtaskText(''); // Очистка текста редактируемой подзадачи при отмене редактирования
         // Переход на главную страницу
         navigate('/');
     };
@@ -234,6 +248,13 @@ const TaskDetailsPage: React.FC = () => {
                     Удалить
                 </button>
             </div>
+            <ConfirmDeleteModal
+                isOpen={isDeleteModalOpen}
+                onClose={handleCancelDelete}
+                onConfirm={handleConfirmDelete}
+                title="Подтверждение удаления"
+                body="Вы уверены, что хотите удалить эту задачу?"
+            />
         </div>
     );
 };
