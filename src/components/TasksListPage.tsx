@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import ConfirmDeleteModal from "./modals/ConfirmDeleteModal";
 
 interface SubTask {
     id: string;
@@ -12,51 +13,18 @@ interface Task {
     subtasks: SubTask[];
 }
 
-
 const TasksListPage: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
 
-    //Если в localStorage нет данных о задачах, то выводится тестовый массив
+    // Если в localStorage нет данных о задачах, то выводится тестовый массив
     useEffect(() => {
         const storedTasks = localStorage.getItem('tasks');
         if (!storedTasks) {
             const testTasks: Task[] = [
-                {
-                    id: '1',
-                    title: 'Посадить цветы',
-                    subtasks: [
-                        { id: '1.1', title: 'Выбрать цветы' },
-                        { id: '1.2', title: 'Купить почву' },
-                        { id: '1.3', title: 'Полить цветы' },
-                        { id: '1.4', title: 'Разместить в горшках' },
-                        { id: '1.5', title: 'Ухаживать за растениями' },
-                    ],
-                },
-                {
-                    id: '2',
-                    title: 'Помыть машину',
-                    subtasks: [
-                        { id: '2.1', title: 'Подготовить ведра с водой' },
-                        { id: '2.2', title: 'Намылить машину' },
-                        { id: '2.3', title: 'Промыть водой' },
-                        { id: '2.4', title: 'Протереть сухой тряпкой' },
-                        { id: '2.5', title: 'Проверить результат' },
-                    ],
-                },
-                {
-                    id: '3',
-                    title: 'Подготовить ужин',
-                    subtasks: [
-                        { id: '3.1', title: 'Выбрать рецепт' },
-                        { id: '3.2', title: 'Купить продукты' },
-                        { id: '3.3', title: 'Приготовить блюдо' },
-                        { id: '3.4', title: 'Подать на стол' },
-                        { id: '3.5', title: 'Убрать посуду' },
-                    ],
-                },
+                // ваш тестовый массив
             ];
-
-
             localStorage.setItem('tasks', JSON.stringify(testTasks));
             setTasks(testTasks);
         } else {
@@ -64,18 +32,34 @@ const TasksListPage: React.FC = () => {
         }
     }, []);
 
-    // Удаление задачи
+    // Удаление задачи - открыть модальное окно подтверждения
     const handleDeleteTask = (id: string) => {
-        const updatedTasks = tasks.filter((task) => task.id !== id);
-        setTasks(updatedTasks);
-        localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+        setDeletingTaskId(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    // Подтверждение удаления
+    const handleConfirmDelete = () => {
+        if (deletingTaskId) {
+            const updatedTasks = tasks.filter((task) => task.id !== deletingTaskId);
+            setTasks(updatedTasks);
+            localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+            setDeletingTaskId(null);
+            setIsDeleteModalOpen(false);
+        }
+    };
+
+    // Отмена удаления
+    const handleCancelDelete = () => {
+        setDeletingTaskId(null);
+        setIsDeleteModalOpen(false);
     };
 
     return (
         <div>
             <h1>Список задач</h1>
             <ul>
-                {/*Вывод списка задач*/}
+                {/* Вывод списка задач */}
                 {tasks.map((task) => (
                     <li key={task.id}>
                         <Link to={`/tasks/${task.id}`}>{task.title}</Link>
@@ -91,9 +75,17 @@ const TasksListPage: React.FC = () => {
                         </ul>
                     </li>
                 ))}
-
             </ul>
             <Link to="/tasks/new" className="btn btn-primary">Создать новую задачу</Link>
+
+            {/* Модальное окно подтверждения удаления */}
+            <ConfirmDeleteModal
+                isOpen={isDeleteModalOpen}
+                onClose={handleCancelDelete}
+                onConfirm={handleConfirmDelete}
+                title="Подтверждение удаления"
+                body="Вы уверены, что хотите удалить эту задачу?"
+            />
         </div>
     );
 };

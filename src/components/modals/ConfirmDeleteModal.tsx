@@ -23,7 +23,7 @@ const ConfirmDeleteModal: React.FC<ModalProps> = ({ title, body, isOpen, onClose
                     </div>
                     <div className="modal-footer">
                         <button type="button" className="btn btn-secondary" onClick={onClose}>
-                            НетДо
+                            Нет
                         </button>
                         {onSave && (
                             <button type="button" className="btn btn-primary" onClick={onSave}>

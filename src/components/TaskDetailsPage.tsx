@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import ConfirmDeleteModal from "./modals/ConfirmDeleteModal";
+import ConfirmCancelModal from "./modals/ConfirmCancelModal";
 
 
 
@@ -26,6 +27,7 @@ const TaskDetailsPage: React.FC = () => {
     const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null); // Новое состояние для отслеживания редактируемой подзадачи
     const [editedSubtaskText, setEditedSubtaskText] = useState<string>(''); // Новое состояние для редактирования текста подзадачи
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // Состояние для отслеживания открытости модального окна удаления
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -95,12 +97,15 @@ const TaskDetailsPage: React.FC = () => {
     };
 
     const handleCancelEdit = () => {
+        setIsCancelModalOpen(true);
+    };
+
+    const handleCancelConfirm = () => {
         setIsEditing(false);
-        // При отмене редактирования восстанавливается исходное состояние задачи
         setEditedTask(task ? { ...task } : null);
-        setEditingSubtaskId(null); // Очистка редактируемой подзадачи при отмене редактирования
-        setEditedSubtaskText(''); // Очистка текста редактируемой подзадачи при отмене редактирования
-        // Переход на главную страницу
+        setEditingSubtaskId(null);
+        setEditedSubtaskText('');
+        setIsCancelModalOpen(false);
         navigate('/');
     };
 
@@ -254,6 +259,11 @@ const TaskDetailsPage: React.FC = () => {
                 onConfirm={handleConfirmDelete}
                 title="Подтверждение удаления"
                 body="Вы уверены, что хотите удалить эту задачу?"
+            />
+            <ConfirmCancelModal
+                isOpen={isCancelModalOpen}
+                onClose={() => setIsCancelModalOpen(false)}
+                onConfirmCancel={handleCancelConfirm}
             />
         </div>
     );
