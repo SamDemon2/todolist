@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import ConfirmDeleteModal from "./modals/ConfirmDeleteModal";
 import ConfirmCancelModal from "./modals/ConfirmCancelModal";
 
@@ -30,6 +30,7 @@ const TaskDetailsPage: React.FC = () => {
     const navigate = useNavigate();
 
 
+    // Загрузка задачи из localStorage при монтировании компонента
     useEffect(() => {
         const storedTasks = localStorage.getItem('tasks');
         if (storedTasks) {
@@ -41,15 +42,17 @@ const TaskDetailsPage: React.FC = () => {
     }, [taskId]);
 
 
-
+    // Функция для отмены последнего изменения
     const handleUndoChanges = () => {
 
     };
+    // Функция для повтора отмененного изменения
 
     const handleRedoChanges = () => {
 
     };
 
+    // Функция для сохранения изменений
     const handleSaveChanges = () => {
         if (editedTask) {
             setTask((prevTask) => {
@@ -71,10 +74,12 @@ const TaskDetailsPage: React.FC = () => {
         }
     };
 
+    // Функция для отмены редактирования
     const handleCancelEdit = () => {
         setIsCancelModalOpen(true);
     };
 
+    // Функция для подтверждения отмены редактирования
     const handleCancelConfirm = () => {
         setIsEditing(false);
         setEditedTask(task ? { ...task } : null);
@@ -84,6 +89,7 @@ const TaskDetailsPage: React.FC = () => {
         navigate('/');
     };
 
+    // Функция для добавления новой подзадачи
     const handleAddSubtask = () => {
         if (newSubtask.trim() !== '') {
             setEditedTask((prev) => {
@@ -97,6 +103,7 @@ const TaskDetailsPage: React.FC = () => {
         }
     };
 
+    // Функция для удаления подзадачи
     const handleDeleteSubtask = (subtaskId: string) => {
         setEditedTask((prev) => {
             if (prev) {
@@ -107,12 +114,14 @@ const TaskDetailsPage: React.FC = () => {
         });
     };
 
+    // Функция для начала редактирования подзадачи
     const handleStartEditSubtask = (subtaskId: string, subtaskText: string) => {
         setEditingSubtaskId(subtaskId);
         setEditedSubtaskText(subtaskText);
     };
 
-    const handleSaveEditSubtask = () => {
+    // Функция для сохранения результатов редактирования подзадачи
+        const handleSaveEditSubtask = () => {
         setEditedTask((prev) => {
             if (prev && editingSubtaskId !== null) {
                 const updatedSubtasks = (prev.subtasks || []).map((subtask) => {
@@ -129,11 +138,13 @@ const TaskDetailsPage: React.FC = () => {
         setEditedSubtaskText('');
     };
 
+    // Функция для отмены редактирования подзадачи
     const handleCancelEditSubtask = () => {
         setEditingSubtaskId(null);
         setEditedSubtaskText('');
     };
 
+    // Функция для изменения состояния готовности подзадачи
     const handleToggleSubtaskCompletion = (subtaskId: string) => {
         setEditedTask((prev) => {
             if (prev) {
@@ -149,10 +160,12 @@ const TaskDetailsPage: React.FC = () => {
         });
     };
 
+    // Функция для удаления задачи
     const handleDeleteTask = () => {
         setIsDeleteModalOpen(true);
     };
 
+    // Функция для подтверждения удаления задачи
     const handleConfirmDelete = () => {
         setTask((prevTask) => {
             if (prevTask) {
@@ -170,10 +183,12 @@ const TaskDetailsPage: React.FC = () => {
         setIsDeleteModalOpen(false);
     };
 
+    // Функция для отмены удаления задачи
     const handleCancelDelete = () => {
         setIsDeleteModalOpen(false);
     };
 
+    // Сообщение о том, что задача не найдена
     if (!task) {
         return <div>Задача не найдена</div>;
     }
@@ -199,6 +214,7 @@ const TaskDetailsPage: React.FC = () => {
                 <button className="btn btn-success ms-2 " onClick={handleAddSubtask}>Добавить подзадачу</button>
             </div>
 
+            {/* Отображение списка подзадач */}
             <ul>
                 {editedTask?.subtasks?.map((subtask) => (
                     <li key={subtask.id}>
@@ -215,12 +231,15 @@ const TaskDetailsPage: React.FC = () => {
                             </>
                         ) : (
                             <>
+                                {/* Чекбокс состояния и вывод текста подзадачи */}
                                 <input
                                     type="checkbox"
                                     checked={subtask.isCompleted || false}
                                     onChange={() => handleToggleSubtaskCompletion(subtask.id)}
                                 />
                                 {subtask.title}
+
+                                {/* Кнопки для удаления и редактирования текста подзадачи */}
                                 <button className="btn btn-danger me-2 ms-2 mt-2" onClick={() => handleDeleteSubtask(subtask.id)}>Удалить</button>
                                 <button className="btn btn-primary mt-2" onClick={() => handleStartEditSubtask(subtask.id, subtask.title)}>Редактировать текст</button>
                             </>
@@ -239,6 +258,8 @@ const TaskDetailsPage: React.FC = () => {
                     Удалить
                 </button>
             </div>
+
+            {/* Модальное окно для подтверждения удаления задачи */}
             <ConfirmDeleteModal
                 isOpen={isDeleteModalOpen}
                 onClose={handleCancelDelete}
@@ -246,6 +267,8 @@ const TaskDetailsPage: React.FC = () => {
                 title="Подтверждение удаления"
                 body="Вы уверены, что хотите удалить эту задачу?"
             />
+
+            {/* Модальное окно для подтверждения отмены редактирования */}
             <ConfirmCancelModal
                 isOpen={isCancelModalOpen}
                 onClose={() => setIsCancelModalOpen(false)}

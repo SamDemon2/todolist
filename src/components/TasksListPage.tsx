@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ConfirmDeleteModal from "./modals/ConfirmDeleteModal";
 
+// Интерфейс подзадачи
 interface SubTask {
     id: string;
     title: string;
 }
 
+// Интерфейс задачи
 interface Task {
     id: string;
     title: string;
@@ -18,6 +20,7 @@ const TasksListPage: React.FC = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
 
+    // Загрузка задач из localStorage при монтировании компонента
     useEffect(() => {
         const storedTasks = localStorage.getItem('tasks');
         if (!storedTasks) {
@@ -31,11 +34,13 @@ const TasksListPage: React.FC = () => {
         }
     }, []);
 
+    // Функция удаления задачи
     const handleDeleteTask = (id: string) => {
         setDeletingTaskId(id);
         setIsDeleteModalOpen(true);
     };
 
+    // Функция подтверждения удаления
     const handleConfirmDelete = () => {
         if (deletingTaskId) {
             const updatedTasks = tasks.filter((task) => task.id !== deletingTaskId);
@@ -46,6 +51,7 @@ const TasksListPage: React.FC = () => {
         }
     };
 
+    // Функция отмены удаления
     const handleCancelDelete = () => {
         setDeletingTaskId(null);
         setIsDeleteModalOpen(false);

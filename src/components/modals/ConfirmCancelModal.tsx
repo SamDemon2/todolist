@@ -1,5 +1,6 @@
 import React from 'react';
 
+//интерфейс модального окна
 interface ConfirmCancelModalProps {
     isOpen: boolean;
     onClose: () => void;
