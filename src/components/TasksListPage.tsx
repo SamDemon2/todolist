@@ -60,7 +60,7 @@ const TasksListPage: React.FC = () => {
             <h1 className="text-center">Список задач</h1>
             <div className="row justify-content-center">
                 {tasks.map((task) => (
-                    <div key={task.id} className="col-12 mb-3">
+                    <div key={task.id} className="col-12 mb-3 justify-content-center w-75">
                         <div className="card">
                             <div className="card-body">
                                 <h4 className="card-title">
