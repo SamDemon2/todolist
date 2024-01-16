@@ -14,14 +14,14 @@ interface Task {
     isCompleted?: boolean;
 }
 
-
 const TaskDetailsPage: React.FC = () => {
     const { taskId } = useParams<{ taskId: string }>();
     const [task, setTask] = useState<Task | null>(null);
     const [editedTask, setEditedTask] = useState<Partial<Task> | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [newSubtask, setNewSubtask] = useState<string>('');
-
+    const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null); // Новое состояние для отслеживания редактируемой подзадачи
+    const [editedSubtaskText, setEditedSubtaskText] = useState<string>(''); // Новое состояние для редактирования текста подзадачи
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -34,8 +34,26 @@ const TaskDetailsPage: React.FC = () => {
         }
     }, [taskId]);
 
-    const handleDeleteTask = () => {
-        // Логика удаления задачи
+    // Логика удаления задачи
+        const handleDeleteTask = () => {
+        if (window.confirm('Вы уверены, что хотите удалить эту задачу?')) {
+            setTask((prevTask) => {
+                if (prevTask) {
+                    // Удаление задачи из localStorage
+                    const storedTasks = localStorage.getItem('tasks');
+                    if (storedTasks) {
+                        const parsedTasks = JSON.parse(storedTasks) as Task[];
+                        const updatedTasks = parsedTasks.filter((t) => t.id !== taskId);
+                        localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+                    }
+
+                    // Переход на главную страницу
+                    navigate('/');
+                    return null;
+                }
+                return null;
+            });
+        }
     };
 
     const handleSaveChanges = () => {
@@ -66,6 +84,8 @@ const TaskDetailsPage: React.FC = () => {
         setIsEditing(false);
         // При отмене редактирования восстанавливается исходное состояние задачи
         setEditedTask(task ? { ...task } : null);
+        setEditingSubtaskId(null); // Очищаем редактируемую подзадачу при отмене редактирования
+        setEditedSubtaskText(''); // Очищаем текст редактируемой подзадачи при отмене редактирования
         // Переход на главную страницу
         navigate('/');
     };
@@ -78,7 +98,6 @@ const TaskDetailsPage: React.FC = () => {
         // Логика повтора отмененного изменения
     };
 
-    //Добавление подзадачи
     const handleAddSubtask = () => {
         if (newSubtask.trim() !== '') {
             setEditedTask((prev) => {
@@ -92,7 +111,6 @@ const TaskDetailsPage: React.FC = () => {
         }
     };
 
-    //Удаление подзадачи
     const handleDeleteSubtask = (subtaskId: string) => {
         setEditedTask((prev) => {
             if (prev) {
@@ -103,7 +121,33 @@ const TaskDetailsPage: React.FC = () => {
         });
     };
 
-    //Отметка о завершении
+    const handleStartEditSubtask = (subtaskId: string, subtaskText: string) => {
+        setEditingSubtaskId(subtaskId);
+        setEditedSubtaskText(subtaskText);
+    };
+
+    const handleSaveEditSubtask = () => {
+        setEditedTask((prev) => {
+            if (prev && editingSubtaskId !== null) {
+                const updatedSubtasks = (prev.subtasks || []).map((subtask) => {
+                    if (subtask.id === editingSubtaskId) {
+                        return { ...subtask, title: editedSubtaskText };
+                    }
+                    return subtask;
+                });
+                return { ...prev, subtasks: updatedSubtasks };
+            }
+            return null;
+        });
+        setEditingSubtaskId(null);
+        setEditedSubtaskText('');
+    };
+
+    const handleCancelEditSubtask = () => {
+        setEditingSubtaskId(null);
+        setEditedSubtaskText('');
+    };
+
     const handleToggleSubtaskCompletion = (subtaskId: string) => {
         setEditedTask((prev) => {
             if (prev) {
@@ -150,13 +194,28 @@ const TaskDetailsPage: React.FC = () => {
             <ul>
                 {editedTask?.subtasks?.map((subtask) => (
                     <li key={subtask.id}>
-                        <input
-                            type="checkbox"
-                            checked={subtask.isCompleted || false}
-                            onChange={() => handleToggleSubtaskCompletion(subtask.id)}
-                        />
-                        {subtask.title}
-                        <button className="btn btn-danger" onClick={() => handleDeleteSubtask(subtask.id)}>Удалить</button>
+                        {editingSubtaskId === subtask.id ? (
+                            <>
+                                <input
+                                    type="text"
+                                    value={editedSubtaskText}
+                                    onChange={(e) => setEditedSubtaskText(e.target.value)}
+                                />
+                                <button className="btn btn-success" onClick={handleSaveEditSubtask}>Сохранить</button>
+                                <button className="btn btn-danger" onClick={handleCancelEditSubtask}>Отменить</button>
+                            </>
+                        ) : (
+                            <>
+                                <input
+                                    type="checkbox"
+                                    checked={subtask.isCompleted || false}
+                                    onChange={() => handleToggleSubtaskCompletion(subtask.id)}
+                                />
+                                {subtask.title}
+                                <button className="btn btn-danger me-2 ms-2" onClick={() => handleDeleteSubtask(subtask.id)}>Удалить</button>
+                                <button className="btn btn-primary" onClick={() => handleStartEditSubtask(subtask.id, subtask.title)}>Редактировать текст</button>
+                            </>
+                        )}
                     </li>
                 ))}
             </ul>
