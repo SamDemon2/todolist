@@ -3,8 +3,6 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import ConfirmDeleteModal from "./modals/ConfirmDeleteModal";
 import ConfirmCancelModal from "./modals/ConfirmCancelModal";
 
-
-
 interface SubTask {
     id: string;
     title: string;
@@ -18,16 +16,22 @@ interface Task {
     isCompleted?: boolean;
 }
 
+interface ChangeStackItem {
+    task: Task | null;
+}
+
 const TaskDetailsPage: React.FC = () => {
     const { taskId } = useParams<{ taskId: string }>();
     const [task, setTask] = useState<Task | null>(null);
     const [editedTask, setEditedTask] = useState<Partial<Task> | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [newSubtask, setNewSubtask] = useState<string>('');
-    const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null); // Новое состояние для отслеживания редактируемой подзадачи
-    const [editedSubtaskText, setEditedSubtaskText] = useState<string>(''); // Новое состояние для редактирования текста подзадачи
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // Состояние для отслеживания открытости модального окна удаления
+    const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
+    const [editedSubtaskText, setEditedSubtaskText] = useState<string>('');
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    const [changeStack, setChangeStack] = useState<Array<ChangeStackItem>>([]);
+    const [stackIndex, setStackIndex] = useState<number>(-1);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -40,54 +44,44 @@ const TaskDetailsPage: React.FC = () => {
         }
     }, [taskId]);
 
-    const handleDeleteTask = () => {
-        // Открывает модальное окно при удалении задачи
-        setIsDeleteModalOpen(true);
+    const addToChangeStack = (task: Task | null) => {
+        setChangeStack((prevStack) => {
+            const index = stackIndex + 1;
+            const newStack: ChangeStackItem[] = [...prevStack.slice(0, index), { task: task }, ...prevStack.slice(index)];
+            setStackIndex(index);
+            return newStack;
+        });
     };
 
-    const handleConfirmDelete = () => {
-        // Логика удаления задачи
-            setTask((prevTask) => {
-                if (prevTask) {
-                    // Удаление задачи из localStorage
-                    const storedTasks = localStorage.getItem('tasks');
-                    if (storedTasks) {
-                        const parsedTasks = JSON.parse(storedTasks) as Task[];
-                        const updatedTasks = parsedTasks.filter((t) => t.id !== taskId);
-                        localStorage.setItem('tasks', JSON.stringify(updatedTasks));
-                    }
-
-                    // Переход на главную страницу
-                    navigate('/');
-                    return null;
-                }
-                return null;
-            });
-            setIsDeleteModalOpen(false); // Закрывает модальное окно после подтверждения удаления
+    const handleUndoChanges = () => {
+        if (stackIndex > 0) {
+            const prevState = changeStack[stackIndex - 1].task;
+            setTask(prevState);
+            setStackIndex(stackIndex - 1);
+        }
     };
 
-    const handleCancelDelete = () => {
-        // Закрывает модальное окно при отмене удаления
-        setIsDeleteModalOpen(false);
+    const handleRedoChanges = () => {
+        if (stackIndex < changeStack.length - 1) {
+            const nextState = changeStack[stackIndex + 1].task;
+            setTask(nextState);
+            setStackIndex(stackIndex + 1);
+        }
     };
-
 
     const handleSaveChanges = () => {
-        // Логика сохранения изменений
-
         if (editedTask) {
             setTask((prevTask) => {
                 if (prevTask) {
                     const updatedTask: Task = { ...prevTask, ...editedTask };
-                    // Обновление данных в localStorage
                     const storedTasks = localStorage.getItem('tasks');
                     if (storedTasks) {
                         const parsedTasks = JSON.parse(storedTasks) as Task[];
                         const updatedTasks = parsedTasks.map((t) => (t.id === taskId ? updatedTask : t));
                         localStorage.setItem('tasks', JSON.stringify(updatedTasks));
                     }
-                    // Переход на главную страницу
                     navigate('/');
+                    addToChangeStack(updatedTask);
                     return updatedTask;
                 }
                 return null;
@@ -107,14 +101,6 @@ const TaskDetailsPage: React.FC = () => {
         setEditedSubtaskText('');
         setIsCancelModalOpen(false);
         navigate('/');
-    };
-
-    const handleUndoChanges = () => {
-        // Логика отмены внесенного изменения
-    };
-
-    const handleRedoChanges = () => {
-        // Логика повтора отмененного изменения
     };
 
     const handleAddSubtask = () => {
@@ -182,6 +168,32 @@ const TaskDetailsPage: React.FC = () => {
         });
     };
 
+    const handleDeleteTask = () => {
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleConfirmDelete = () => {
+        setTask((prevTask) => {
+            if (prevTask) {
+                const storedTasks = localStorage.getItem('tasks');
+                if (storedTasks) {
+                    const parsedTasks = JSON.parse(storedTasks) as Task[];
+                    const updatedTasks = parsedTasks.filter((t) => t.id !== taskId);
+                    localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+                }
+                navigate('/');
+                addToChangeStack(null);
+                return null;
+            }
+            return null;
+        });
+        setIsDeleteModalOpen(false);
+    };
+
+    const handleCancelDelete = () => {
+        setIsDeleteModalOpen(false);
+    };
+
     if (!task) {
         return <div>Задача не найдена</div>;
     }
@@ -190,7 +202,6 @@ const TaskDetailsPage: React.FC = () => {
         <div>
             <h1>{isEditing ? 'Редактирование' : task.title}</h1>
 
-            {/*Форма редактирования задачи*/}
             <label>
                 Название задачи:
                 <input
@@ -200,7 +211,6 @@ const TaskDetailsPage: React.FC = () => {
                 />
             </label>
 
-            {/* Добавление подзадачи */}
             <div>
                 <label>
                     Новая подзадача:
@@ -209,7 +219,6 @@ const TaskDetailsPage: React.FC = () => {
                 <button className="btn btn-success" onClick={handleAddSubtask}>Добавить подзадачу</button>
             </div>
 
-            {/* Список подзадач */}
             <ul>
                 {editedTask?.subtasks?.map((subtask) => (
                     <li key={subtask.id}>
@@ -245,7 +254,6 @@ const TaskDetailsPage: React.FC = () => {
             <button className="btn btn-dark me-2" onClick={handleRedoChanges}>Повторить отмененное изменение</button>
 
             <div>
-                {/* Просмотр задачи */}
                 <Link to={`/tasks/edit/${task.id}`} className="btn btn-primary mr-2">
                     Редактировать
                 </Link>

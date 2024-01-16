@@ -56,27 +56,33 @@ const TasksListPage: React.FC = () => {
     };
 
     return (
-        <div>
-            <h1>Список задач</h1>
-            <ul>
-                {/* Вывод списка задач */}
+        <div className="container mt-5">
+            <h1 className="text-center">Список задач</h1>
+            <div className="row justify-content-center">
                 {tasks.map((task) => (
-                    <li key={task.id}>
-                        <Link to={`/tasks/${task.id}`}>{task.title}</Link>
-                        <button className="btn btn-danger ms-2" onClick={() => handleDeleteTask(task.id)}>Удалить</button>
-                        <Link to={`/tasks/edit/${task.id}`} className="btn btn-primary ms-2">
-                            Редактировать
-                        </Link>
-                        <ul>
-                            {/* Проверка на наличие subtasks перед использованием slice */}
-                            {task.subtasks && task.subtasks.slice(0, 3).map((subtask) => (
-                                <li key={subtask.id}>{subtask.title}</li>
-                            ))}
-                        </ul>
-                    </li>
+                    <div key={task.id} className="col-12 mb-3">
+                        <div className="card">
+                            <div className="card-body">
+                                <h4 className="card-title">
+                                   {task.title}
+                                </h4>
+                                <p className="card-text">
+                                    {task.subtasks && task.subtasks.slice(0, 3).map((subtask) => (
+                                        <span key={subtask.id} className="badge bg-secondary me-2">{subtask.title}</span>
+                                    ))}
+                                </p>
+                                <div className="btn-group">
+                                    <button className="btn btn-danger" onClick={() => handleDeleteTask(task.id)}>Удалить</button>
+                                    <Link to={`/tasks/edit/${task.id}`} className="btn btn-primary">
+                                        Редактировать
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 ))}
-            </ul>
-            <Link to="/tasks/new" className="btn btn-primary">Создать новую задачу</Link>
+            </div>
+            <Link to="/tasks/new" className="btn btn-primary mt-3">Создать новую задачу</Link>
 
             {/* Модальное окно подтверждения удаления */}
             <ConfirmDeleteModal
